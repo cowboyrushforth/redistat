@@ -211,8 +211,13 @@ module Redistat
     end
 
     def summarize_add_keys(sets, key, sum)
-      sets.each do |date|
-        db.hgetall("#{key.prefix}#{date}").each do |k, v|
+      replies = db.pipelined {
+        sets.each do |date|
+          db.hgetall("#{key.prefix}#{date}")
+        end
+      }
+      replies.each do |reply|
+        reply.each do |k,v|
           sum.set_or_incr(k, v.to_i)
         end
       end
@@ -220,8 +225,13 @@ module Redistat
     end
 
     def summarize_rem_keys(sets, key, sum)
-      sets.each do |date|
-        db.hgetall("#{key.prefix}#{date}").each do |k, v|
+      replies = db.pipelined {
+        sets.each do |date|
+          db.hgetall("#{key.prefix}#{date}")
+        end
+      }
+      replies.each do |reply|
+        reply.each do |k,v|
           sum.set_or_incr(k, -v.to_i)
         end
       end
